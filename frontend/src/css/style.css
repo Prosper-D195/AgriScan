@@ -1,0 +1,116 @@
+:root {
+    --bg-color: #0b0f19;       /* Slate très sombre */
+    --card-bg: #111827;        /* Gris de carte */
+    --border-color: #1f2937;
+    --accent-green: #10b981;   /* Vert agricole moderne */
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    margin: 30px 0 15px 0;
+}
+
+.logo-placeholder {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+h1 {
+    margin: 0 0 8px 0;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+}
+
+header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+/* Conteneur du jeu */
+.game-container {
+    position: relative;
+    max-width: 90%;
+    margin-bottom: 50px;
+}
+
+.image-wrapper {
+    position: relative;
+    cursor: crosshair; /* Curseur en forme de cible */
+    display: inline-block;
+}
+
+#targetImage {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--border-color);
+}
+
+/* Cadre de ciblage (Target Box) */
+.target-box {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border: 3px dashed var(--accent-green);
+    border-radius: 6px;
+    transform: translate(-50%, -50%); /* Permet de centrer parfaitement la box sur le point cliqué */
+    pointer-events: none; /* Empêche la box de bloquer les clics futurs */
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+/* Menu de sélection contextuel */
+.selection-menu {
+    position: absolute;
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    min-width: 180px;
+}
+
+.selection-menu p {
+    margin: 4px 0 8px 8px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.menu-btn {
+    display: block;
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--text-main);
+    padding: 8px 12px;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.menu-btn:hover {
+    background-color: var(--accent-green);
+    color: #eedada;
+    font-weight: 500;
+}

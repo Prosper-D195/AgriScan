@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L'AIGLE ROYAL - AgriScan</title>
+    <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo-placeholder">🦅</div>
+        <h1>AgriScan : Plateforme de Diagnostic</h1>
+        <p>Analysez l'image et identifiez les anomalies agronomiques le plus rapidement possible.</p>
+    </header>
+
+    <main class="game-container">
+        <div class="image-wrapper" id="imageWrapper">
+            <img src="https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?q=80&w=1200" alt="Zone d'analyse de culture" id="targetImage">
+            
+            <div class="target-box" id="targetBox" style="display: none;"></div>
+
+            <div class="selection-menu" id="selectionMenu" style="display: none;">
+                <p>Anomalie détectée :</p>
+                <button class="menu-btn" data-id="mildiou">Symptôme de Mildiou</button>
+                <button class="menu-btn" data-id="carence">Carence Nutritionnelle</button>
+                <button class="menu-btn" data-id="ravageur">Attaque de Ravageurs</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="src/js/app.js"></script>
+</body>
+</html>
