@@ -9,6 +9,10 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json()); // Permet de lire le format JSON envoyé par le frontend
 
+// 🚀 AJOUT : Importation et liaison des routes de l'API
+const apiRoutes = require('./routes/api');
+app.use('/api', apiRoutes); // Toutes les routes de api.js seront préfixées par /api
+
 // Route de test de base
 app.get('/', (req, res) => {
     res.send('Serveur AgriScan - L\'AIGLE ROYAL opérationnel !');
