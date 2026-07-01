@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db'); // Import du pool de connexion
+const pool = require('../config/db'); 
 
 // 1. Route pour récupérer une image aléatoire depuis PostgreSQL
 router.get('/random-orchard', async (req, res) => {
     try {
-        // Requête SQL pour récupérer une image aléatoire de la table diagnostics
         const result = await pool.query('SELECT id, image_url, nom_culture FROM diagnostics ORDER BY RANDOM() LIMIT 1');
         
         if (result.rows.length === 0) {
@@ -25,19 +24,19 @@ router.get('/random-orchard', async (req, res) => {
     }
 });
 
-// 2. Route POST pour valider les coordonnées du clic de l'utilisateur
+// 2. Route POST pour valider les coordonnées du clic de l'utilisateur via l'ID
 router.post('/validate', async (req, res) => {
-    const { anomalieId, x, y } = req.body;
+    const { anomalieId, x, y } = req.body; // anomalieId doit être l'ID de la ligne (ex: 1)
     
     try {
-        // On récupère les coordonnées cibles en base de données pour l'anomalie correspondante
+        // 🔥 Correction : On cherche par ID unique plutôt que par le texte de l'anomalie
         const result = await pool.query(
-            'SELECT * FROM diagnostics WHERE anomalie_correcte = $1 LIMIT 1', 
+            'SELECT * FROM diagnostics WHERE id = $1 LIMIT 1', 
             [anomalieId]
         );
 
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: "Type d'anomalie inconnu." });
+            return res.status(404).json({ success: false, message: "Diagnostic introuvable en base de données." });
         }
 
         const diagnostic = result.rows[0];
