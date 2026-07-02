@@ -2,7 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/db'); 
 
-// 1. Route pour récupérer une image aléatoire depuis PostgreSQL
+// ==========================================
+// 1. ROUTE : Récupérer une image aléatoire
+// ==========================================
 router.get('/random-orchard', async (req, res) => {
     try {
         const result = await pool.query('SELECT id, image_url, nom_culture FROM diagnostics ORDER BY RANDOM() LIMIT 1');
@@ -24,12 +26,22 @@ router.get('/random-orchard', async (req, res) => {
     }
 });
 
-// 2. Route POST pour valider les coordonnées du clic de l'utilisateur via l'ID
+// ==========================================
+// 2. ROUTE : Valider le diagnostic de l'utilisateur
+// ==========================================
 router.post('/validate', async (req, res) => {
-    const { anomalieId, x, y } = req.body; // anomalieId doit être l'ID de la ligne (ex: 1)
+    const { anomalieId, x, y } = req.body;
+
+    // 🛡️ Sécurité : Vérifier que toutes les données requises sont reçues
+    if (anomalieId === undefined || x === undefined || y === undefined) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Données de diagnostic incomplètes (ID ou coordonnées manquantes)." 
+        });
+    }
     
     try {
-        // 🔥 Correction : On cherche par ID unique plutôt que par le texte de l'anomalie
+        // Recherche du diagnostic cible par son ID unique
         const result = await pool.query(
             'SELECT * FROM diagnostics WHERE id = $1 LIMIT 1', 
             [anomalieId]
@@ -41,9 +53,17 @@ router.post('/validate', async (req, res) => {
 
         const diagnostic = result.rows[0];
 
-        // Vérification : le clic est-il dans les bornes Min et Max ?
-        const xValide = (x >= parseFloat(diagnostic.x_min) && x <= parseFloat(diagnostic.x_max));
-        const yValide = (y >= parseFloat(diagnostic.y_min) && y <= parseFloat(diagnostic.y_max));
+        // 💡 Sécurisation des calculs : Conversion explicite en nombres décimaux
+        const userX = parseFloat(x);
+        const userY = parseFloat(y);
+        const minX = parseFloat(diagnostic.x_min);
+        const maxX = parseFloat(diagnostic.x_max);
+        const minY = parseFloat(diagnostic.y_min);
+        const maxY = parseFloat(diagnostic.y_max);
+
+        // Vérification stricte : le clic est-il dans la bounding box ?
+        const xValide = (userX >= minX && userX <= maxX);
+        const yValide = (userY >= minY && userY <= maxY);
 
         if (xValide && yValide) {
             res.json({ 
