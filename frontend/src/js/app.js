@@ -3,51 +3,56 @@ const imageWrapper = document.getElementById('imageWrapper');
 const targetImage = document.getElementById('targetImage');
 const targetBox = document.getElementById('targetBox');
 const selectionMenu = document.getElementById('selectionMenu');
+const btnValider = document.getElementById('btnValider');
 
-// Variables pour stocker les coordonnées normalisées du dernier clic
+// Variables globales pour stocker l'image active et les coordonnées du clic
+let currentImageId = null;
 let lastClickXPercent = 0;
 let lastClickYPercent = 0;
 
-// 🚀 AJOUT : Fonction pour charger automatiquement l'image depuis Pixabay via le Backend
+// 🚀 ÉTAPE 1 : Charger l'image depuis la base de données PostgreSQL du Backend
 async function loadDynamicImage() {
     try {
         const response = await fetch('http://localhost:5000/api/random-orchard');
         const data = await response.json();
         
         if (data.url && targetImage) {
-            targetImage.src = data.url;
-            console.log("Image Pixabay chargée avec succès :", data.url);
+            // On ajoute l'adresse du serveur devant le chemin stocké en base de données
+            targetImage.src = `http://localhost:5000/${data.url}`;
+            
+            // 💡 On mémorise l'ID unique de la ligne SQL (ex: 1)
+            currentImageId = data.id;
+            
+            console.log(`[L'AIGLE ROYAL] Image chargée avec succès. ID Base de données : ${currentImageId}`);
         } else {
-            console.error("URL manquante dans la réponse du serveur.");
+            console.error("Données incomplètes reçues du serveur.");
         }
     } catch (error) {
         console.error("Erreur lors du chargement initial de l'image agricole :", error);
     }
 }
 
-// Lancement automatique du chargement d'image
+// Lancement au chargement complet du script
 loadDynamicImage();
 
-// Écouteur d'événement sur le conteneur de l'image
+// 🚀 ÉTAPE 2 : Gérer le clic sur l'image et calculer les %
 imageWrapper.addEventListener('click', (e) => {
-    if (e.target.classList.contains('menu-btn')) return;
+    // Si on clique sur le bouton de validation lui-même, on ne déplace pas la cible
+    if (e.target.id === 'btnValider') return;
 
-    // 1. Position absolue du clic par rapport à l'image wrapper
     const rect = imageWrapper.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    // 2. NORMALISATION : Calcul des coordonnées en pourcentage
+    // Normalisation en % de la largeur et hauteur de l'image
     if (targetImage && targetImage.clientWidth > 0) {
         lastClickXPercent = (clickX / targetImage.clientWidth) * 100;
         lastClickYPercent = (clickY / targetImage.clientHeight) * 100;
     }
 
-    // Log de contrôle pour le développement
-    console.log(`Clic Pixel -> X: ${clickX}px, Y: ${clickY}px`);
     console.log(`Clic Normalisé -> X: ${lastClickXPercent.toFixed(2)}%, Y: ${lastClickYPercent.toFixed(2)}%`);
 
-    // 3. Positionnement visuel de la boîte de ciblage et du menu
+    // Positionnement visuel de la boîte et du menu de validation
     targetBox.style.left = `${clickX}px`;
     targetBox.style.top = `${clickY}px`;
     targetBox.style.display = 'block';
@@ -57,7 +62,7 @@ imageWrapper.addEventListener('click', (e) => {
     selectionMenu.style.display = 'block';
 });
 
-// Écouteur d'événement global pour fermer le menu si on clique ailleurs
+// Fermer le menu si l'utilisateur clique en dehors de la zone d'analyse
 document.addEventListener('click', (e) => {
     if (!imageWrapper.contains(e.target)) {
         targetBox.style.display = 'none';
@@ -65,42 +70,38 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Écouteur pour la sélection d'une anomalie dans le menu avec appel API
-const menuButtons = document.querySelectorAll('.menu-btn');
-menuButtons.forEach(button => {
-    button.addEventListener('click', async (e) => {
-        const selectedAnomalie = e.target.getAttribute('data-id');
-        
-        // Masquage immédiat des éléments de ciblage après sélection
-        targetBox.style.display = 'none';
-        selectionMenu.style.display = 'none';
+// 🚀 ÉTAPE 3 : Envoyer les coordonnées au backend pour vérification SQL
+btnValider.addEventListener('click', async () => {
+    // Masquage visuel direct après soumission
+    targetBox.style.display = 'none';
+    selectionMenu.style.display = 'none';
 
-        try {
-            // Envoi des coordonnées et de l'id au serveur local Express
-            const response = await fetch('http://localhost:5000/api/validate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    anomalieId: selectedAnomalie,
-                    x: lastClickXPercent,
-                    y: lastClickYPercent
-                })
-            });
+    try {
+        const response = await fetch('http://localhost:5000/api/validate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                anomalieId: currentImageId, // 🔥 On transmet l'ID numérique (ex: 1)
+                x: lastClickXPercent,
+                y: lastClickYPercent
+            })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            // Gestion de la réponse dynamique du serveur
-            if (data.success) {
-                alert(`✅ ${data.message}`);
-            } else {
-                alert(`❌ ${data.message}`);
-            }
-
-        } catch (error) {
-            console.error("Erreur lors de la communication avec le serveur :", error);
-            alert("Impossible de joindre le serveur de diagnostic. Vérifiez qu'il est allumé !");
+        // Affichage du diagnostic dynamique géré par la base de données
+        if (data.success) {
+            alert(`✅ ${data.message}`);
+            // Optionnel : Recharger une nouvelle image aléatoire après un succès !
+            loadDynamicImage();
+        } else {
+            alert(`❌ ${data.message}`);
         }
-    });
+
+    } catch (error) {
+        console.error("Erreur de liaison API :", error);
+        alert("Impossible de joindre le serveur de diagnostic.");
+    }
 });
